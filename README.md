@@ -6,6 +6,6 @@ Jan Görgens
 
 Henry
 
-## Conver Markdown to PDF
+## Convert Markdown to PDF
 
 Use [md2pdf](https://md2pdf.netlify.app/) to convert markdown files to pdf.
