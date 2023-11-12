@@ -5,7 +5,12 @@ import type { HistoryItem } from '@/data/sheet03/consensus';
 import { Legend, Line, LineChart, Tooltip, XAxis, YAxis } from 'recharts';
 export const ConsensusChart = (props: { data: HistoryItem[] }) => {
 	return (
-		<LineChart data={props.data} height={400} margin={{ left: 30 }} width={800}>
+		<LineChart
+			data={props.data}
+			height={400}
+			margin={{ bottom: 10, left: 30, right: 10, top: 10 }}
+			width={800}
+		>
 			<XAxis
 				dataKey="iteration"
 				label={{
@@ -30,9 +35,9 @@ export const ConsensusChart = (props: { data: HistoryItem[] }) => {
 			/>
 			<Tooltip />
 			<Legend />
-			<Line dataKey="A" stroke="blue" type="monotone" />
-			<Line dataKey="B" stroke="green" type="monotone" />
-			<Line dataKey="undecided" stroke="red" type="monotone" />
+			<Line dataKey="A" dot={false} stroke="blue" type="monotone" />
+			<Line dataKey="B" dot={false} stroke="green" type="monotone" />
+			<Line dataKey="undecided" dot={false} stroke="red" type="monotone" />
 		</LineChart>
 	);
 };
