@@ -1,12 +1,12 @@
 # build output
 build
 dist
+.next
 
 # config files
 *.config.js
 *.config.ts
 *.cjs
-*.mjs
 
 # dependencies
 node_modules
