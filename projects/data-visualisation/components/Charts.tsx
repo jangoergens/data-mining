@@ -1,4 +1,5 @@
 'use client';
+
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from 'recharts';
 
 export const ExampleChart = () => {
