@@ -1,8 +1,8 @@
 'use client';
 
 import { CountryChart } from '@/components/Charts';
-import { Divider, Heading } from '@chakra-ui/react';
-import { useEffect, useState } from 'react';
+import { Button, Divider, Heading, Radio, RadioGroup, Stack, VStack } from '@chakra-ui/react';
+import { useState } from 'react';
 
 export type Data = {
 	field: {
@@ -23,11 +23,25 @@ export type FormattedData = {
 	year: number;
 };
 
-export default function Sheet04() {
-	const [data, setData] = useState<FormattedData[]>([]);
+type FileName =
+	| 'primary_education_numbers'
+	| 'public_expenditure_percentage_gdp'
+	| 'public_expenditure_percentage_total'
+	| 'secondary_education_percentage'
+	| 'tertiary_education_numbers';
 
-	useEffect(() => {
-		fetch('/api/xml-parser')
+export default function Sheet04() {
+	const [countryCharts, setCountryCharts] = useState<JSX.Element[]>([]);
+	const [displayResult, setDisplayResult] = useState(false);
+	const [fileNameSelection, setFileNameSelection] = useState<FileName>('primary_education_numbers');
+	const [processing, setProcessing] = useState('No Data has been processed yet.');
+
+	const analyzeData = (fileName: FileName) => {
+		const grouped: Record<string, FormattedData[]> = {};
+		setDisplayResult(false);
+		setProcessing('Processing...');
+
+		fetch('/api/xml-parser?fileName=' + fileName)
 			.then((response) => response.json() as Promise<Data[]>)
 			.then((data) => {
 				const renamedList: FormattedData[] = data?.map((item) => ({
@@ -38,35 +52,75 @@ export default function Sheet04() {
 					year: item.field[1],
 				}));
 
-				setData(renamedList);
+				renamedList.forEach((item) => {
+					const key = item.country;
+					if (!grouped[key]) {
+						grouped[key] = [];
+					}
+					grouped[key].push(item);
+				});
+
+				const yAxisNameMap: Record<string, string> = {
+					primary_education_numbers: 'Number of Students',
+					public_expenditure_percentage_gdp: 'Public Expenditure Percentage GDP',
+					public_expenditure_percentage_total: 'Public Expenditure Percentage Total',
+					secondary_education_percentage: 'Secondary Education Percentage',
+					tertiary_education_numbers: 'Number of Students',
+				};
+
+				renderCountryCharts(grouped, yAxisNameMap[fileName]);
 			})
 			.catch((error) => console.error('Error:', error));
-	}, []);
 
-	const grouped: Record<string, FormattedData[]> = {};
-	data.forEach((item) => {
-		const key = item.country;
-		if (!grouped[key]) {
-			grouped[key] = [];
-		}
-		grouped[key].push(item);
-	});
+		setProcessing('Data has been processed.');
+	};
+
+	const renderCountryCharts = (grouped: Record<string, FormattedData[]>, yAxisName: string) => {
+		setCountryCharts(
+			Object.keys(grouped).map((key) => (
+				<div key={key}>
+					<Heading>{key}</Heading>
+					<CountryChart data={grouped[key]} yAxisName={yAxisName} />
+				</div>
+			)),
+		);
+	};
 
 	return (
 		<>
 			<Heading size="lg">Sheet 04</Heading>
 			<Divider />
-			{Object.keys(grouped).map(
-				(key) =>
-					key === 'Austria' && (
-						<div key={key}>
-							<Heading>{key}</Heading>
-							<CountryChart data={grouped[key]} />
-						</div>
-					),
-			)}
-
-			{/* <div className="flex items-center gap-2"></div> */}
+			<VStack align={'center'}>
+				<RadioGroup
+					onChange={(value: FileName) => setFileNameSelection(value)}
+					value={fileNameSelection}
+				>
+					<Stack>
+						<Radio value="primary_education_numbers">Primary Education Numbers</Radio>
+						<Radio value="secondary_education_percentage">Secondary Education Percentage</Radio>
+						<Radio value="tertiary_education_numbers">Tertiary Education Numbers</Radio>
+						<Radio value="public_expenditure_percentage_gdp">
+							Public Expenditure Percentage GDP
+						</Radio>
+						<Radio value="public_expenditure_percentage_total">
+							Public Expenditure Percentage Total
+						</Radio>
+					</Stack>
+				</RadioGroup>
+				<Button colorScheme="blue" onClick={() => analyzeData(fileNameSelection)} size="lg">
+					Process Data
+				</Button>
+			</VStack>
+			<span>{processing}</span>
+			<Divider />
+			<Button
+				colorScheme={displayResult ? 'red' : 'green'}
+				onClick={() => setDisplayResult(!displayResult)}
+				size="lg"
+			>
+				Toggle Country Charts
+			</Button>
+			{displayResult && countryCharts}
 		</>
 	);
 }
