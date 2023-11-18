@@ -5,11 +5,9 @@ import { XMLParser } from 'fast-xml-parser';
 import fs from 'fs';
 
 export default function handler(req: NextApiRequest, res: NextApiResponse) {
+	const fileName = req.query.fileName as string;
 	try {
-		const xml = fs.readFileSync(
-			process.cwd() + '/data/sheet04/1/primary_education_numbers.xml',
-			'utf-8',
-		);
+		const xml = fs.readFileSync(process.cwd() + '/data/sheet04/' + fileName + '.xml', 'utf-8');
 
 		const parser = new XMLParser();
 		type JSONData = {
