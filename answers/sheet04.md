@@ -15,3 +15,10 @@
 - numbers and percentages mixed sometimes
 - unnamed columns / properties after parsing
 - unused values
+- missing years
+
+## Exercise 3
+
+- remove age groups since they are not applicable
+- remove all rows with missing values
+- optimize points for data display
