@@ -1,9 +1,21 @@
 'use client';
 
 import { EduLifeCountryChart } from '@/components/Charts';
-import { Button, Divider, Heading } from '@chakra-ui/react';
+import {
+	Button,
+	Divider,
+	HStack,
+	Heading,
+	Table,
+	TableContainer,
+	Tbody,
+	Td,
+	Th,
+	Thead,
+	Tr,
+} from '@chakra-ui/react';
 import { useState } from 'react';
-import { sampleCorrelation } from 'simple-statistics';
+import { mean, median, quantile, sampleCorrelation, standardDeviation } from 'simple-statistics';
 
 export type DataFormat = {
 	adultMortality: string;
@@ -31,10 +43,12 @@ export type DataFormat = {
 };
 
 export default function Sheet05() {
-	const [correlation, setCorrelation] = useState(0);
-	const [countryCharts, setCountryCharts] = useState<JSX.Element[]>([]);
+	const [graphics, setGraphics] = useState<JSX.Element[]>([]);
 	const [displayResult, setDisplayResult] = useState(false);
+	const [meanCorrelation, setMeanCorrelation] = useState(0);
+	const [medianCorrelation, setMedianCorrelation] = useState(0);
 	const [processing, setProcessing] = useState('No Data has been processed yet.');
+	const [combinedCorrelation, setCombinedCorrelation] = useState(0);
 
 	const analyzeData = () => {
 		const grouped: Record<string, DataFormat[]> = {};
@@ -44,7 +58,6 @@ export default function Sheet05() {
 		fetch('/api/csv-parser?fileName=sheet05/life_expectancy_data.csv')
 			.then((response) => response.json() as Promise<DataFormat[]>)
 			.then((data) => {
-				data = data.slice(0, 40);
 				data.forEach((item) => {
 					const key = item.country;
 					if (!grouped[key]) {
@@ -53,54 +66,156 @@ export default function Sheet05() {
 					grouped[key].push(item);
 				});
 
-				setCountryCharts(
+				const correlationByCountry: number[] = [];
+				const validCountries: string[] = [];
+
+				setGraphics(
 					Object.keys(grouped).map((key) => {
 						const countryData = grouped[key].reverse();
 
 						const lifeExpectancy = countryData.map((item) => Number(item.lifeExpectancy));
 						const yearsOfSchooling = countryData.map((item) => Number(item.schooling));
-						const countryCorrelation = sampleCorrelation(lifeExpectancy, yearsOfSchooling);
+						const countryCorrelation =
+							lifeExpectancy.length > 1 && yearsOfSchooling.length > 1
+								? sampleCorrelation(lifeExpectancy, yearsOfSchooling)
+								: NaN;
+
+						if (!Number.isNaN(countryCorrelation)) {
+							correlationByCountry.push(countryCorrelation);
+							validCountries.push(key);
+						}
 
 						return (
-							<div key={key}>
+							<>
 								<Heading>{key}</Heading>
-								<p>Correlation: {countryCorrelation.toFixed(4)}</p>
+								<p>
+									Correlation:{' '}
+									{Number.isNaN(countryCorrelation)
+										? 'Not Available'
+										: countryCorrelation.toFixed(4)}
+								</p>
 								<EduLifeCountryChart data={countryData} />
-							</div>
+							</>
 						);
 					}),
 				);
+				setMeanCorrelation(mean(correlationByCountry));
+				setMedianCorrelation(median(correlationByCountry));
 
-				const lifeExpectancy = data.map((item) => Number(item.lifeExpectancy));
-				const yearsOfSchooling = data.map((item) => Number(item.schooling));
-
-				setCorrelation(sampleCorrelation(lifeExpectancy, yearsOfSchooling));
+				const countryData = data.filter((item) => validCountries.includes(item.country));
+				const lifeExpectancy = countryData.map((item) => Number(item.lifeExpectancy));
+				const yearsOfSchooling = countryData.map((item) => Number(item.schooling));
+				setCombinedCorrelation(sampleCorrelation(lifeExpectancy, yearsOfSchooling));
 			})
 			.catch((error) => console.error('Error:', error));
 
 		setProcessing('Data has been processed.');
 	};
 
+	const exploreData = () => {
+		setDisplayResult(false);
+		setProcessing('Processing...');
+
+		fetch('/api/csv-parser?fileName=sheet05/life_expectancy_data.csv')
+			.then((response) => response.json() as Promise<DataFormat[]>)
+			.then((data) => {
+				const lifeExpectancy = data.map((item) => Number(item.lifeExpectancy));
+				const schooling = data.map((item) => Number(item.schooling));
+				const table = (
+					<TableContainer>
+						<Table variant="simple">
+							<Thead>
+								<Tr>
+									<Th></Th>
+									<Th isNumeric>Life Expectancy</Th>
+									<Th isNumeric>Schooling</Th>
+								</Tr>
+							</Thead>
+							<Tbody>
+								<Tr>
+									<Td>count</Td>
+									<Td isNumeric>{lifeExpectancy.length}</Td>
+									<Td isNumeric>{schooling.length}</Td>
+								</Tr>
+								<Tr>
+									<Td>mean</Td>
+									<Td isNumeric>{mean(lifeExpectancy).toFixed(2)}</Td>
+									<Td isNumeric>{mean(schooling).toFixed(2)}</Td>
+								</Tr>
+								<Tr>
+									<Td>std</Td>
+									<Td isNumeric>{standardDeviation(lifeExpectancy).toFixed(2)}</Td>
+									<Td isNumeric>{standardDeviation(schooling).toFixed(2)}</Td>
+								</Tr>
+								<Tr>
+									<Td>min</Td>
+									<Td isNumeric>{Math.min(...lifeExpectancy)}</Td>
+									<Td isNumeric>{Math.min(...schooling)}</Td>
+								</Tr>
+								<Tr>
+									<Td>25%</Td>
+									<Td isNumeric>{quantile(lifeExpectancy, 0.25)}</Td>
+									<Td isNumeric>{quantile(schooling, 0.25)}</Td>
+								</Tr>
+								<Tr>
+									<Td>50%</Td>
+									<Td isNumeric>{quantile(lifeExpectancy, 0.5)}</Td>
+									<Td isNumeric>{quantile(schooling, 0.5)}</Td>
+								</Tr>
+								<Tr>
+									<Td>75%</Td>
+									<Td isNumeric>{quantile(lifeExpectancy, 0.75)}</Td>
+									<Td isNumeric>{quantile(schooling, 0.75)}</Td>
+								</Tr>
+								<Tr>
+									<Td>max</Td>
+									<Td isNumeric>{Math.max(...lifeExpectancy)}</Td>
+									<Td isNumeric>{Math.max(...schooling)}</Td>
+								</Tr>
+							</Tbody>
+						</Table>
+					</TableContainer>
+				);
+
+				setGraphics([table]);
+			})
+			.catch((error) => console.error('Error:', error));
+
+		setProcessing('Data has been explored.');
+	};
+
+	function renderCorrelationText(label: string, correlation: number) {
+		if (processing && correlation !== 0) {
+			return <p>{`${label}: ${correlation.toPrecision(4)}`}</p>;
+		}
+		return null;
+	}
+
 	return (
 		<>
 			<Heading size="lg">Sheet 05</Heading>
 			<Divider />
-			<Button colorScheme="blue" onClick={() => analyzeData()} size="lg">
-				Process Data
-			</Button>
-			<span>{processing}</span>
-			<span>
-				{processing && correlation !== 0 && `Correlation Coefficent: ${correlation.toPrecision(4)}`}
-			</span>
+			<HStack>
+				<Button colorScheme="pink" onClick={() => exploreData()} size="lg">
+					Explore Data
+				</Button>
+				<Button colorScheme="blue" onClick={() => analyzeData()} size="lg">
+					Process Data
+				</Button>
+			</HStack>
+			<p>{processing}</p>
+			{renderCorrelationText('Combined Correlation Coefficient', combinedCorrelation)}
+			{renderCorrelationText('Mean Correlation Coefficient by Country', meanCorrelation)}
+			{renderCorrelationText('Median Correlation Coefficient by Country', medianCorrelation)}
 			<Divider />
 			<Button
 				colorScheme={displayResult ? 'red' : 'green'}
 				onClick={() => setDisplayResult(!displayResult)}
 				size="lg"
 			>
-				Toggle Country Charts
+				Toggle Graphics
 			</Button>
-			{displayResult && countryCharts}
+			{displayResult && graphics}
 		</>
 	);
 }

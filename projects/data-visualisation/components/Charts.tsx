@@ -127,6 +127,7 @@ export const EduLifeCountryChart = (props: { data: Sheet05DataFormat[] }) => {
 			<XAxis
 				dataKey="year"
 				domain={[2000, 2015]}
+				interval={0}
 				label={{
 					position: { x: 300, y: -10 },
 					value: 'Year',
