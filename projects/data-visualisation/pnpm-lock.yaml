@@ -32,6 +32,9 @@ dependencies:
   recharts:
     specifier: ^2.9.3
     version: 2.9.3(prop-types@15.8.1)(react-dom@18.2.0)(react@18.2.0)
+  simple-statistics:
+    specifier: ^7.8.3
+    version: 7.8.3
 
 devDependencies:
   '@types/node':
@@ -4243,6 +4246,10 @@ packages:
       get-intrinsic: 1.2.2
       object-inspect: 1.13.1
     dev: true
+
+  /simple-statistics@7.8.3:
+    resolution: {integrity: sha512-JFvMY00t6SBGtwMuJ+nqgsx9ylkMiJ5JlK9bkj8AdvniIe5615wWQYkKHXe84XtSuc40G/tlrPu0A5/NlJvv8A==}
+    dev: false
 
   /slash@3.0.0:
     resolution: {integrity: sha512-g9Q1haeby36OSStwb4ntCGGGaKsaVSjQ68fBxoQcutl5fS1vuY18H3wSt3jFyFtrkx+Kz0V1G85A4MyAdDMi2Q==}
