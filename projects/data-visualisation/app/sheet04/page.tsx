@@ -1,6 +1,6 @@
 'use client';
 
-import { CountryChart } from '@/components/Charts';
+import { EducationCountryChart as CountryChart } from '@/components/Charts';
 import { Button, Divider, Heading, Radio, RadioGroup, Stack, VStack } from '@chakra-ui/react';
 import { useState } from 'react';
 
