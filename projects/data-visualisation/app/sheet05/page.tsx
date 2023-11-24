@@ -3,33 +3,35 @@
 import { EduLifeCountryChart } from '@/components/Charts';
 import { Button, Divider, Heading } from '@chakra-ui/react';
 import { useState } from 'react';
+import { sampleCorrelation } from 'simple-statistics';
 
 export type DataFormat = {
-	adultMortality: number;
-	alcohol: number;
-	bmi: number;
+	adultMortality: string;
+	alcohol: string;
+	bmi: string;
 	country: string;
-	diphtheria: number;
-	gdp: number;
-	hepatitisB: number;
-	hiv: number;
-	incomeCompositionOfResources: number;
-	infantDeaths: number;
-	lifeExpectancy: number;
-	measles: number;
-	percentageExpenditure: number;
-	polio: number;
-	population: number;
-	schooling: number;
+	diphtheria: string;
+	gdp: string;
+	hepatitisB: string;
+	hiv: string;
+	incomeCompositionOfResources: string;
+	infantDeaths: string;
+	lifeExpectancy: string;
+	measles: string;
+	percentageExpenditure: string;
+	polio: string;
+	population: string;
+	schooling: string;
 	status: 'Developed' | 'Developing';
-	thinnessFiveToNine: number;
-	thinnessUnderTwenty: number;
-	totalExpenditure: number;
-	underFiveDeaths: number;
-	year: number;
+	thinnessFiveToNine: string;
+	thinnessUnderTwenty: string;
+	totalExpenditure: string;
+	underFiveDeaths: string;
+	year: string;
 };
 
 export default function Sheet05() {
+	const [correlation, setCorrelation] = useState(0);
 	const [countryCharts, setCountryCharts] = useState<JSX.Element[]>([]);
 	const [displayResult, setDisplayResult] = useState(false);
 	const [processing, setProcessing] = useState('No Data has been processed yet.');
@@ -50,14 +52,29 @@ export default function Sheet05() {
 					}
 					grouped[key].push(item);
 				});
+
 				setCountryCharts(
-					Object.keys(grouped).map((key) => (
-						<div key={key}>
-							<Heading>{key}</Heading>
-							<EduLifeCountryChart data={grouped[key].reverse()} />
-						</div>
-					)),
+					Object.keys(grouped).map((key) => {
+						const countryData = grouped[key].reverse();
+
+						const lifeExpectancy = countryData.map((item) => Number(item.lifeExpectancy));
+						const yearsOfSchooling = countryData.map((item) => Number(item.schooling));
+						const countryCorrelation = sampleCorrelation(lifeExpectancy, yearsOfSchooling);
+
+						return (
+							<div key={key}>
+								<Heading>{key}</Heading>
+								<p>Correlation: {countryCorrelation.toFixed(4)}</p>
+								<EduLifeCountryChart data={countryData} />
+							</div>
+						);
+					}),
 				);
+
+				const lifeExpectancy = data.map((item) => Number(item.lifeExpectancy));
+				const yearsOfSchooling = data.map((item) => Number(item.schooling));
+
+				setCorrelation(sampleCorrelation(lifeExpectancy, yearsOfSchooling));
 			})
 			.catch((error) => console.error('Error:', error));
 
@@ -72,6 +89,9 @@ export default function Sheet05() {
 				Process Data
 			</Button>
 			<span>{processing}</span>
+			<span>
+				{processing && correlation !== 0 && `Correlation Coefficent: ${correlation.toPrecision(4)}`}
+			</span>
 			<Divider />
 			<Button
 				colorScheme={displayResult ? 'red' : 'green'}
