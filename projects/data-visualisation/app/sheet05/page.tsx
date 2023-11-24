@@ -67,14 +67,16 @@ export default function Sheet05() {
 				});
 
 				const correlationByCountry: number[] = [];
-				const validCountries: string[] = [];
 
 				setGraphics(
 					Object.keys(grouped).map((key) => {
 						const countryData = grouped[key].reverse();
 
-						const lifeExpectancy = countryData.map((item) => Number(item.lifeExpectancy));
-						const yearsOfSchooling = countryData.map((item) => Number(item.schooling));
+						const validData = countryData.filter(
+							(item) => Number(item.lifeExpectancy) > 0 && Number(item.schooling) > 0,
+						);
+						const lifeExpectancy = validData.map((item) => Number(item.lifeExpectancy));
+						const yearsOfSchooling = validData.map((item) => Number(item.schooling));
 						const countryCorrelation =
 							lifeExpectancy.length > 1 && yearsOfSchooling.length > 1
 								? sampleCorrelation(lifeExpectancy, yearsOfSchooling)
@@ -82,7 +84,6 @@ export default function Sheet05() {
 
 						if (!Number.isNaN(countryCorrelation)) {
 							correlationByCountry.push(countryCorrelation);
-							validCountries.push(key);
 						}
 
 						return (
@@ -102,9 +103,11 @@ export default function Sheet05() {
 				setMeanCorrelation(mean(correlationByCountry));
 				setMedianCorrelation(median(correlationByCountry));
 
-				const countryData = data.filter((item) => validCountries.includes(item.country));
-				const lifeExpectancy = countryData.map((item) => Number(item.lifeExpectancy));
-				const yearsOfSchooling = countryData.map((item) => Number(item.schooling));
+				const validData = data.filter(
+					(item) => Number(item.lifeExpectancy) > 0 && Number(item.schooling) > 0,
+				);
+				const lifeExpectancy = validData.map((item) => Number(item.lifeExpectancy));
+				const yearsOfSchooling = validData.map((item) => Number(item.schooling));
 				setCombinedCorrelation(sampleCorrelation(lifeExpectancy, yearsOfSchooling));
 			})
 			.catch((error) => console.error('Error:', error));
