@@ -44,7 +44,6 @@ export default function Sheet03() {
 					max={999999}
 					min={4}
 					onChange={(valueString) => setAgentsAmount(parseInt(valueString))}
-					placeholder="Number of Agents"
 					size="lg"
 				>
 					<NumberInputField />
